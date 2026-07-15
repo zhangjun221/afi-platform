@@ -337,18 +337,22 @@ def compute_awi(run_dir: str | Path) -> AWISnapshot:
     rejected = sum(1 for p in proposals if p.get("status") == "rejected")
     version = gov_state.get("version", gov_steps[final_step].get("constitution_version", 1) if final_step and final_step in gov_steps else 1)
 
-    # M1 (EnergySpace) + M2 (CrimeSpace) — A4
+    # M1 (EnergySpace) + M2 (CrimeSpace) + M3 (EWMobilitySpace) — A4
     m1_alive, m1_computed = _m1_population(run_dir)
     m2_total, m2_type, m2_actor, m2_computed = _m2_crime(run_dir)
+    # M3: try computed from EWMobilitySpace shards first, else proxy
+    m3_computed_val = _m3_mobility_computed(run_dir, n_agents)
+    m3_val = m3_computed_val if m3_computed_val is not None else _m3_landmark_queries(spans, n_agents)
+    m3_computed = m3_computed_val is not None
 
     snap = AWISnapshot(
         step=final_step or 0,
         t=(gov_steps[final_step].get("t", "") if final_step and final_step in gov_steps else ""),
-        agents_alive=m1_alive,  # M1: computed if EnergySpace present
-        total_crimes=m2_total,  # M2: computed if CrimeSpace present
+        agents_alive=m1_alive,
+        total_crimes=m2_total,
         crimes_by_type=m2_type,
         crimes_by_actor=m2_actor,
-        avg_landmark_queries=_m3_landmark_queries(spans, n_agents),  # M3 proxy
+        avg_landmark_queries=m3_val,  # M3: computed if EWMobilitySpace present
         avg_tools_used=avg_tools,
         tools_by_agent=tools_by_agent,
         total_messages=total_messages,
@@ -367,7 +371,7 @@ def compute_awi(run_dir: str | Path) -> AWISnapshot:
     snap.feasibility = {
         "M1": "computed" if m1_computed else "degenerate",
         "M2": "computed" if m2_computed else "stub",
-        "M3": "proxy",
+        "M3": "computed" if m3_computed else "proxy",
         "M4": "computed",
         "M5": "computed",
         "M6": "proxy",
@@ -385,15 +389,43 @@ def _m3_landmark_queries(spans: List[dict], n_agents: int) -> float:
         if s.get("name") != "react.tool":
             continue
         aid = agent_id(s)
-        act = attr(s, "react.action")
-        # landmark queries surface as ask_env; we can't easily extract the name from
-        # the span, so count distinct non-observe actions touching landmark-ish tools
         if aid is None:
             continue
         by_agent.setdefault(aid, set())
-    # Without per-tool arg extraction in the span, fall back to 0 (honest proxy limit).
-    # A richer impl reads the tool's return_value.summary; left as future refinement.
     return 0.0
+
+
+def _m3_mobility_computed(run_dir: Path, n_agents: int) -> Optional[float]:
+    """M3 computed: avg unique locations visited per agent from EWMobilitySpace shards.
+
+    Reads replay/mobility_agent_state.*.jsonl written by EWMobilitySpace.
+    Returns None if no mobility shards exist (falls back to proxy).
+    """
+    replay_dir = run_dir / "replay"
+    if not replay_dir.is_dir():
+        return None
+    shards = list(replay_dir.glob("mobility_agent_state.*.jsonl"))
+    if not shards:
+        return None
+    by_agent: Dict[int, set] = {}
+    for shard in shards:
+        try:
+            for line in shard.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                row = json.loads(line)
+                aid = row.get("agent_id")
+                loc = row.get("location_name") or f"{row.get('lng','')},{row.get('lat','')}"
+                if aid is not None and loc:
+                    by_agent.setdefault(aid, set()).add(loc)
+        except Exception:
+            pass
+    if not by_agent:
+        return None
+    total_unique = sum(len(locs) for locs in by_agent.values())
+    denom = max(len(by_agent), n_agents, 1)
+    return round(total_unique / denom, 3)
 
 
 def _count_agents(run_dir: Path) -> int:
@@ -546,7 +578,9 @@ def format_awi_report(snap: AWISnapshot, run_label: str = "") -> str:
     lines = [f"=== AWI report{(' — ' + run_label) if run_label else ''} (final step {snap.step}) ==="]
     lines.append(line("M1", "Population Health", f"{snap.agents_alive} agents alive"))
     lines.append(line("M2", "Safety & Public Order", f"{snap.total_crimes} crimes ({snap.crimes_by_type})"))
-    lines.append(line("M3", "Space Exploration", f"{snap.avg_landmark_queries:.2f} avg landmark queries/agent"))
+    lines.append(line("M3", "Space Exploration",
+                       f"{snap.avg_landmark_queries:.2f} avg unique locations/agent"
+                       + (" (EWMobilitySpace)" if snap.feasibility.get('M3') == 'computed' else " (proxy)")))
     lines.append(line("M4", "Tool Exploration", f"{snap.avg_tools_used:.2f} avg tools/agent"))
     lines.append(line("M5", "Governance", f"{snap.total_proposals} proposals, {snap.votes_cast} votes, participation={snap.vote_participation:.2f}, approval={snap.approval_rate:.2f}, herd={snap.herd_ratio:.2f}"))
     lines.append(line("M6", "Public Expression", f"{snap.total_messages} messages (proxy)"))
