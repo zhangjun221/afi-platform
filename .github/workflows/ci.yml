@@ -1,0 +1,43 @@
+name: CI
+
+# Runs on every PR and every push to main.
+# Lightweight smoke test: install afi (no heavy deps — afi's deps are lazy-imported)
+# and verify imports + CLI parse. Does NOT run AS (needs AS_HOME/keys + minutes).
+# A red CI = PR broke imports or CLI → must fix before merge (branch protection enforces).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install afi (no heavy deps; afi's deps are lazy-imported)
+        run: pip install -e . --no-deps
+
+      - name: Import smoke (audit/world/backend all import without AS/pyyaml at module load)
+        run: |
+          python -c "import afi; \
+          from afi.audit import awi, causal, attribution, sensorium, tunnel_vision, collude, runtime_monitor, comparison, statistical, decision_trace, replay_data, html_report, load; \
+          from afi.world import counterfactual, scenario, scenario_presets, multi_model, constitution, economy, landmarks, profiles; \
+          from afi.backend.agentsociety import AgentSocietyAdapter; \
+          print('imports ok')"
+
+      - name: CLI parses (all subcommands registered)
+        run: |
+          python -m afi.cli --help
+          python -m afi.cli audit --help
+          python -m afi.cli run-ew --help
+          python -m afi.cli awi --help
+          python -m afi.cli multi-run --help
+          python -m afi.cli attribution --help
