@@ -111,6 +111,7 @@ python -m afi.cli attribution <run_dir> --counterfactual \
 ## 文档
 
 - `docs/progress-summary.md` — 平台搭建进展总结（规划 vs 实际）
+- `docs/collaboration-guide.md` — **协作开发指南（给项目管理者+协作者，含 PR/review/冲突/分支保护）**
 - `docs/technical-architecture.md` — 技术架构 + §12 完成度
 - `docs/architecture-and-roadmap.md` — 形态/架构/A1-A4 路线
 - `docs/three-platforms-intro.md` — EW/AFI/AS 三平台

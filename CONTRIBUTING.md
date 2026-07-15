@@ -1,7 +1,7 @@
 # Contributing to afi-platform
 
 > 给协作者：平台 A1-A4 闭环已跑通（见 `docs/progress-summary.md`），但还有一批"做更深/更全/更准"的缺口。本文列出**还没做的**、每项**怎么做**、**注意事项**。
-> 领任务前先读 `README.md`（Setup）+ `docs/progress-summary.md`（完成度）+ `docs/technical-architecture.md` §12（完成度细节）。
+> 领任务前先读 `README.md`（Setup）+ `docs/progress-summary.md`（完成度）+ `docs/technical-architecture.md` §12（完成度细节）+ `docs/collaboration-guide.md`（PR/review/分支/冲突流程，新人必读）。
 
 ---
 
