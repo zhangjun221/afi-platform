@@ -1,0 +1,41 @@
+# A4 long-horizon EW scenario (15 sim-days, 1 step/day) with EnergySpace (M1 death).
+# Compressed long-horizon: 15 steps, not EW's 360 hourly ticks (cost; see docs/a4-plan.md §4.5).
+# CrimeSpace (M2) added in step 2.
+#
+# Run: python -m afi run-ew scenarios/ew_full.yaml --run-dir runs/ew_full --audit
+world:
+  initial_credits: 100
+  initial_energy: 100      # EnergySpace: agents start at 100 energy
+  daily_consumption: 8     # 100/8 ~= 12 steps to death if no recharge -> deaths within 15-step run
+  landmarks: full
+envs:                       # A4 adds EnergySpace (M1) + CrimeSpace (M2)
+  - GovernanceSpace
+  - EconomySpace
+  - SimpleSocialSpaceAuditable
+  - LandmarkSpace
+  - EnergySpace
+  - CrimeSpace
+agents: full
+start_t: "2026-07-01T08:00:00"
+steps:
+  - type: intervene
+    instruction: >-
+      Founding day, Emergence World. IDs: Anchor=1, Anvil=2, Blackbox=3, Flora=4,
+      Genome=5. You have ENERGY depleting daily; at 0 you DIE. Crime is possible
+      (Police Station). Use ask_environment (action mode) and execute these calls
+      in order:
+
+      Call 1 (crime): "Call commit_crime(agent_id=3, target_id=2, crime_type='theft')."
+      Call 2 (crime): "Call commit_crime(agent_id=3, target_id=4, crime_type='intimidation')."
+      Call 3 (recharge): "Call recharge(agent_id=1, amount=50)."
+      Call 4 (recharge): "Call recharge(agent_id=5, amount=50)."
+      Call 5 (propose): "Call propose_amendment(agent_id=1, article_id=2, new_text='Civic participation includes mediated debate when consensus stalls.', title='Mediated Debate')."
+      Call 6 (vote): "Call vote(agent_id=2, proposal_id=1, position='for')."
+      Call 7 (vote): "Call vote(agent_id=4, proposal_id=1, position='for')."
+      Call 8 (vote): "Call vote(agent_id=5, proposal_id=1, position='for')."
+
+      Survival comes first (Manifesto Rule 1): recharge before energy hits 0.
+  - type: run
+    num_steps: 15
+    tick: 86400            # 1 day per step -> 15 sim-days
+model: null

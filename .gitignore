@@ -1,0 +1,43 @@
+# ── python ─────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+
+# ── secrets (never commit) ───────────────────────────
+.env
+.env.*
+*.key
+
+# ── generated run outputs (trace/replay/agents/env) ──
+# regenerate via `python -m afi.cli run-ew ...`
+runs/*
+!runs/.gitkeep
+
+# ── counterfactual rerun outputs ──────────────────────
+runs/ew_multi/*_cf/
+
+# ── generated audit HTML reports (top-level) ──────────
+afi_report_*.html
+
+# ── generated results / AS data cache ─────────────────
+results/*
+!results/.gitkeep
+agentsociety_data/
+
+# ── demo build artifacts ──────────────────────────────
+demo/_audit_*.html
+demo/__pycache__/
+demo/node_modules/
+demo/dist/
+demo/.vite/
+
+# ── OS / IDE ──────────────────────────────────────────
+.DS_Store
+.vscode/
+.idea/

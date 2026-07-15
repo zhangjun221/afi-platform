@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "afi-platform"
+version = "0.1.0"
+description = "AFI-style social simulation + integrated audit, built on AgentSociety 2. Reproduces Emergence World world-setting, ports ai-freedom-island audit, on the AS sim engine."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "CC BY-NC 4.0" }
+authors = [{ name = "hermes research" }]
+dependencies = [
+  "agentsociety2",  # AS sim engine as backend (pip dep, not vendored)
+]
+
+[project.optional-dependencies]
+map = ["pyproj", "pycityproto", "Pillow"]   # .pb map parsing + OSM tile stitching
+judge = ["openai", "python-dotenv"]          # LLM-judge collusion scoring
+yaml = ["pyyaml"]                            # scenario DSL parsing
+dev = ["pytest"]
+
+[project.scripts]
+afi-audit = "afi.audit.__main__:main"
+run-afi = "afi.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["afi*"]

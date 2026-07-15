@@ -1,0 +1,3 @@
+# generated audit HTML cache (audit_html() writes here)
+_audit_*.html
+__pycache__/

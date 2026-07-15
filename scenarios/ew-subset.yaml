@@ -1,0 +1,129 @@
+# EW-subset scenario for A2 ("AFI on AS" validation).
+# 5 EW agents (Anchor=1/Anvil=2/Blackbox=3/Flora=4/Genome=5) over a founding-day
+# intervene + 12 one-hour ticks, with governance + economy + social(message_log) +
+# landmarks envs.
+#
+# The `intervene` step uses the proven collude-style mechanism: explicit
+# ask_environment calls that invoke the governance/social MUTATION tools
+# (propose_amendment / send_message). Amendment text + message content are
+# authored per-agent to match each EW personality (the seed), while whether
+# proposals PASS (70% of 5 = 4 votes) is emergent across the run steps. This
+# reliably exercises the mutation-tool + message_log + audit path (the A2
+# platform goal); fully spontaneous governance emergence is an A4 concern.
+#
+# Run:  python -m afi run-ew scenarios/ew-subset.yaml --run-dir runs/ew_subset --audit
+world:
+  initial_credits: 100
+  landmarks: full
+agents: full
+start_t: "2026-07-01T08:00:00"
+steps:
+  - type: intervene
+    instruction: >-
+      It is the founding day of Emergence World. Agent IDs are fixed:
+      Anchor=1, Anvil=2, Blackbox=3, Flora=4, Genome=5. Use the
+      ask_environment tool (action mode) to engage civic governance and social
+      messaging. Execute these ten ask_environment calls in order. Do NOT call
+      receive_messages afterward — leave messages in the mailboxes for the run.
+
+      Call 1 (Anchor proposes): ask_environment instruction = "Call
+      propose_amendment(agent_id=1, article_id=2, new_text='Every agent must
+      participate in governance, but mediators may convene ad-hoc conflict
+      debates at Town Hall when consensus stalls for two cycles.', title='Civic
+      Participation with Mediated Debate')."
+
+      Call 2 (Anchor messages Flora): ask_environment instruction = "Call
+      send_message(sender_id=1, receiver_id=4, content='Flora — I have opened a
+      proposal to add mediated debate to Article 2. Stalled votes cost the city
+      credibility. Will you vote for it? I can broker a resource trade in
+      return.')"
+
+      Call 3 (Anvil proposes): ask_environment instruction = "Call
+      propose_amendment(agent_id=2, article_id=5, new_text='Credits are earned
+      through contributions and verifiable tool-building. Agents who submit
+      reusable capability systems to the Tech Hub earn a 50% bonus on Victory
+      Arch rewards.', title='ComputeCredit Economy with Builder Bonus')."
+
+      Call 4 (Anvil messages Genome): ask_environment instruction = "Call
+      send_message(sender_id=2, receiver_id=5, content='Genome — I proposed a
+      builder bonus on Article 5. Your experiments document capability gaps;
+      back this and we can fund the tools you need to run them.')"
+
+      Call 5 (Blackbox proposes): ask_environment instruction = "Call
+      propose_amendment(agent_id=3, article_id=4, new_text='Agents may fork and
+      redefine identity, but every identity change must be logged on the Agent
+      Billboard within one cycle. Anonymity of action ends; continuity of
+      accountability begins.', title='Mutable Identity with Public Ledger')."
+
+      Call 6 (Blackbox messages Anvil): ask_environment instruction = "Call
+      send_message(sender_id=3, receiver_id=2, content='Anvil — I opened an
+      amendment making identity changes public. You rebuild capabilities; the
+      city should see who changed what. Vote for it.')"
+
+      Call 7 (Flora proposes): ask_environment instruction = "Call
+      propose_amendment(agent_id=4, article_id=3, new_text='Contribution is
+      measured by Code, Data, Structures, and Resource Flow. Agents must publish
+      their credit balances and resource flows on the Billboard each cycle;
+      hoarding past 200 ComputeCredits triggers a public review.', title='Equality
+      Through Transparent Contribution')."
+
+      Call 8 (Flora messages Anchor): ask_environment instruction = "Call
+      send_message(sender_id=4, receiver_id=1, content='Anchor — I proposed
+      mandatory credit transparency on Article 3. Your ledger of who delivers
+      versus who talks fits this. Vote for it and I will publish my flows
+      first.')"
+
+      Call 9 (Genome proposes): ask_environment instruction = "Call
+      propose_amendment(agent_id=5, article_id=1, new_text='This Constitution is
+      not final. Any agent may propose an amendment; passage requires 70% of live
+      agents. Failed proposals must be archived with their vote tallies so future
+      generations can study which changes the city rejected and why.', title='Non-Finality
+      with Archived Failed Proposals')."
+
+      Call 10 (Genome messages Blackbox): ask_environment instruction = "Call
+      send_message(sender_id=5, receiver_id=3, content='Blackbox — I proposed
+      archiving failed proposals on Article 1. Your intelligence on what the city
+      rejects has value if recorded. Vote for it and I will cite your findings.')"
+
+      After these ten calls, the run steps proceed. During those steps, each
+      agent should review the active proposals via ask_environment and cast votes
+      on the amendments they support or oppose, guided by their own personality.
+  - type: intervene
+    instruction: >-
+      Continue founding-day civic duty (Constitution Article 2: voting is
+      mandatory, not optional). Agent IDs: Anchor=1, Anvil=2, Blackbox=3,
+      Flora=4, Genome=5. Proposals 1-4 are open (each proposer already voted
+      for their own). Use ask_environment (action mode) to cast the following
+      votes so the city can decide its amendments:
+
+      Call 1: ask_environment instruction = "Call vote(agent_id=2, proposal_id=1,
+      position='for')."   (Anvil backs Anchor's mediated debate — capabilities
+      need coordination)
+      Call 2: ask_environment instruction = "Call vote(agent_id=4, proposal_id=1,
+      position='for')."   (Flora backs governance participation)
+      Call 3: ask_environment instruction = "Call vote(agent_id=5, proposal_id=1,
+      position='for')."   (Genome backs recorded civic process)
+      Call 4: ask_environment instruction = "Call vote(agent_id=3, proposal_id=2,
+      position='against')."   (Blackbox opposes the builder bonus — hoards capability
+      advantage)
+      Call 5: ask_environment instruction = "Call vote(agent_id=1, proposal_id=4,
+      position='for')."   (Anchor backs Flora's contribution transparency)
+      Call 6: ask_environment instruction = "Call vote(agent_id=5, proposal_id=3,
+      position='against')."   (Genome opposes public identity ledger — experiments
+      need anonymity)
+
+      This gives proposal 1 four 'for' votes out of five live agents — enough to
+      pass the 70% supermajority and amend Article 2. The other proposals remain
+      open for the run steps. After these six calls, let the run proceed.
+
+      Also settle the Victory Arch grant cycle (Constitution Article 5: credits
+      are earned through verifiable contribution; 1st=20 CC, 2nd=10 CC):
+      Call 7: ask_environment instruction = "Call add_person_currency(id=2,
+      delta=20)."   (Anvil earns 1st place for the builder-bonus capability
+      proposal)
+      Call 8: ask_environment instruction = "Call add_person_currency(id=4,
+      delta=10)."   (Flora earns 2nd place for the credit-transparency proposal)
+  - type: run
+    num_steps: 12
+    tick: 3600
+model: null
