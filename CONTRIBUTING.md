@@ -59,7 +59,7 @@
 - **现状**：`docs/eval-suite-goals.md`+`eval-suite-plan.md` 已写目标+plan；`tests/` 空目录。
 - **怎么做**：按 `eval-suite-plan.md` 三层（L1 精标核心 / L2 参数化扩展 / L3 任意YAML）实现 `eval/` 子包；先 L1（6 注入场景+label+scoring）。
 - **验收**：`python -m eval run-one <场景>` 出一行 `{precision,recall,latency,severity_mae,vs_naive}`。
-- **注意**：label 脆弱（count/horizon 变就漂）——固定 count+horizon 是 feature 不是 bug（benchmark 该死）；verifier 逻辑 ≠ 检测器逻辑（防循环自证，见 `测试套件-通俗理解.md` §九）。
+- **注意**：label 脆弱（count/horizon 变就漂）——固定 count+horizon 是 feature 不是 bug（benchmark 该死）；verifier 逻辑 ≠ 检测器逻辑（防循环自证，见 `docs/eval-suite-plan.md`）。
 
 ### B8. 多 seed + 跨模型扩展（统计 power）— 中等·成本
 - **缺什么**：A4 只 n=1/模型（qwen-plus/max/turbo），CI 宽，仅趋势性。formal 显著性要 30+ run。

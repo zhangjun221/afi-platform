@@ -115,7 +115,7 @@ python -m afi.cli attribution <run_dir> --counterfactual \
 - `docs/architecture-and-roadmap.md` — 形态/架构/A1-A4 路线
 - `docs/three-platforms-intro.md` — EW/AFI/AS 三平台
 - `docs/phase1-first-domino/` — 第一骨牌归因 + 反事实世界分叉旗舰（pilot + 理论 + novelty 核验）
-- `docs/测试套件-通俗理解.md` — 测试套件（缓做）通俗文档
+- `docs/eval-suite-goals.md` + `docs/eval-suite-plan.md` — 测试套件（缓做）目标+实现 plan
 - `DEVLOG.md` — 轮次建设日志
 
 ## 上游

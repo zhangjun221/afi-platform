@@ -109,7 +109,7 @@ audit-first 开放平台单独不够 impact，但作旗舰 artifact 支撑——
 1. 仓库 13 份战略文档反复收敛到它（非又拍出来）。
 2. detection 商品化、attribution 无人做（field gap 实证 + 仓库 prior 双重确认）。
 3. 有硬验收（>70% top-3 localization）。
-4. **label-free**，绕开 label 脆弱性纠结（见 `测试套件-通俗理解.md` §十一）。
+4. **label-free**，绕开 label 脆弱性纠结（见 `docs/eval-suite-goals.md`）。
 5. `causal.py`/AWI/replay 是种子，非从零。
 6. 顺便给 qwen 崩溃定性（能力 vs alignment），把最大软肋变结论。
 

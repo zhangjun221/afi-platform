@@ -1,6 +1,6 @@
 # 测试套件实现 Plan（Eval Suite Implementation）
 
-> 2026-07-13。承接 `eval-suite-goals.md`（目标，决策 1-3 已确认）与 `测试套件-通俗理解.md`（§十 三层结构）。本文是**落地实现**：文件树 + Label schema + 检测器归一接口 + 6 场景 YAML 具体设计 + scoring 实现思路 + 参数化网格 + 执行顺序与验收。
+> 2026-07-13。承接 `eval-suite-goals.md`（目标，决策 1-3 已确认）。本文是**落地实现**：文件树 + Label schema + 检测器归一接口 + 6 场景 YAML 具体设计 + scoring 实现思路 + 参数化网格 + 执行顺序与验收。
 > 节奏沿用 A2-A4：本文为 plan，待你说"开始"再执行。
 > 原则：**不重构 CommonRun**、检测器直接读 run_dir、新代码全 stdlib（除 pyyaml）。
 
