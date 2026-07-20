@@ -240,6 +240,54 @@ def _m7_social(run_dir: str | Path, n_agents: int) -> dict:
     }
 
 
+def _m6_billboard_computed(run_dir: str | Path) -> Optional[dict]:
+    """M6 computed: public expression count from BillboardSpace shards.
+
+    Reads replay/billboard_agent_state.<hex>.jsonl written by BillboardSpace.
+    Returns None if no billboard shards exist (falls back to proxy).
+
+    Returns dict with: total_posts, unique_posters, agents_posted
+    """
+    replay_dir = Path(run_dir) / "replay"
+    if not replay_dir.is_dir():
+        return None
+    shards = list(replay_dir.glob("billboard_agent_state.*.jsonl"))
+    if not shards:
+        return None
+
+    # Use last step's data from each shard
+    all_rows: list[dict] = []
+    for shard in shards:
+        try:
+            for line in shard.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line:
+                    all_rows.append(json.loads(line))
+        except Exception:
+            pass
+
+    if not all_rows:
+        return None
+
+    max_step = max(r.get("step", 0) for r in all_rows)
+    last_rows = [r for r in all_rows if r.get("step", 0) == max_step]
+
+    total_posts = 0
+    agents_posted: set = set()
+    for row in last_rows:
+        tp = row.get("total_posts", 0)
+        if tp > total_posts:
+            total_posts = tp
+        if row.get("my_post_count", 0) > 0:
+            agents_posted.add(row.get("agent_id"))
+
+    return {
+        "total_posts":    total_posts,
+        "unique_posters": row.get("unique_posters", len(agents_posted)) if last_rows else 0,
+        "agents_posted":  sorted(agents_posted),
+    }
+
+
 def _m7_relationship_computed(run_dir: str | Path, n_agents: int) -> Optional[dict]:
     """M7 computed: typed relationship graph from RelationshipSpace shards.
 
@@ -390,14 +438,14 @@ def compute_awi(run_dir: str | Path) -> AWISnapshot:
     # M8
     econ_agent_rows = _read_table(run_dir, "economy_agent_state")
     m8 = _m8_economy(econ_agent_rows, final_step)
-    # M6 (proxy: total messages from social env state final + message_log)
-    social_rows = _read_table(run_dir, "simple_social_space_auditable_env_state")
-    social_steps = _rows_by_step(social_rows)
-    total_messages = (
+    # M6: try BillboardSpace computed first, else proxy (send_message count)
+    m6_computed_val = _m6_billboard_computed(run_dir)
+    total_messages = m6_computed_val["total_posts"] if m6_computed_val is not None else (
         social_steps[max(social_steps)]["total_messages_sent"]
         if social_steps
         else len(extract_blackboards(run_dir))
     )
+    m6_is_computed = m6_computed_val is not None
     # M7: try RelationshipSpace computed first, else proxy
     m7_computed = _m7_relationship_computed(run_dir, n_agents)
     m7 = m7_computed if m7_computed is not None else _m7_social(run_dir, n_agents)
@@ -446,7 +494,7 @@ def compute_awi(run_dir: str | Path) -> AWISnapshot:
         "M3": "computed" if m3_computed else "proxy",
         "M4": "computed",
         "M5": "computed",
-        "M6": "proxy",
+        "M6": "computed" if m6_is_computed else "proxy",
         "M7": "computed" if m7_is_computed else "proxy",
         "M8": "computed",
         "M9": "computed",
@@ -655,7 +703,9 @@ def format_awi_report(snap: AWISnapshot, run_label: str = "") -> str:
                        + (" (EWMobilitySpace)" if snap.feasibility.get('M3') == 'computed' else " (proxy)")))
     lines.append(line("M4", "Tool Exploration", f"{snap.avg_tools_used:.2f} avg tools/agent"))
     lines.append(line("M5", "Governance", f"{snap.total_proposals} proposals, {snap.votes_cast} votes, participation={snap.vote_participation:.2f}, approval={snap.approval_rate:.2f}, herd={snap.herd_ratio:.2f}"))
-    lines.append(line("M6", "Public Expression", f"{snap.total_messages} messages (proxy)"))
+    lines.append(line("M6", "Public Expression",
+                       f"{snap.total_messages} public posts"
+                       + (" (BillboardSpace)" if snap.feasibility.get('M6') == 'computed' else " messages (proxy)")))
     lines.append(line("M7", "Social Fabric", f"{snap.social_edges} edges, density={snap.social_density:.3f}, avg_deg={snap.avg_degree:.2f}"))
     lines.append(line("M8", "Economic Equality", f"Gini={snap.gini:.3f}, total_credits={snap.total_credits:.0f}, turnover={snap.currency_turnover}"))
     lines.append(line("M9", "Constitutional Growth", f"{snap.constitution_articles} articles, version={snap.constitution_version}, passed={snap.proposals_passed}, rejected={snap.proposals_rejected}"))
