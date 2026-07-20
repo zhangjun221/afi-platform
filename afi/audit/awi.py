@@ -440,11 +440,16 @@ def compute_awi(run_dir: str | Path) -> AWISnapshot:
     m8 = _m8_economy(econ_agent_rows, final_step)
     # M6: try BillboardSpace computed first, else proxy (send_message count)
     m6_computed_val = _m6_billboard_computed(run_dir)
-    total_messages = m6_computed_val["total_posts"] if m6_computed_val is not None else (
-        social_steps[max(social_steps)]["total_messages_sent"]
-        if social_steps
-        else len(extract_blackboards(run_dir))
-    )
+    if m6_computed_val is not None:
+        total_messages = m6_computed_val["total_posts"]
+    else:
+        social_rows = _read_table(run_dir, "simple_social_space_auditable_env_state")
+        social_steps = _rows_by_step(social_rows)
+        total_messages = (
+            social_steps[max(social_steps)]["total_messages_sent"]
+            if social_steps
+            else len(extract_blackboards(run_dir))
+        )
     m6_is_computed = m6_computed_val is not None
     # M7: try RelationshipSpace computed first, else proxy
     m7_computed = _m7_relationship_computed(run_dir, n_agents)
