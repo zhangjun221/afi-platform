@@ -240,6 +240,76 @@ def _m7_social(run_dir: str | Path, n_agents: int) -> dict:
     }
 
 
+def _m7_relationship_computed(run_dir: str | Path, n_agents: int) -> Optional[dict]:
+    """M7 computed: typed relationship graph from RelationshipSpace shards.
+
+    Reads replay/relationship_agent_state.<hex>.jsonl written by RelationshipSpace.
+    Returns None if no relationship shards exist (falls back to proxy).
+
+    Returns dict with:
+      social_edges, social_density, avg_degree,
+      type_counts (ally/rival/mentor/mentee/neutral),
+      agents_with_rel
+    """
+    replay_dir = Path(run_dir) / "replay"
+    if not replay_dir.is_dir():
+        return None
+    shards = list(replay_dir.glob("relationship_agent_state.*.jsonl"))
+    if not shards:
+        return None
+
+    # Collect latest relationship state per agent pair (from last shard by step)
+    all_rows: list[dict] = []
+    for shard in shards:
+        try:
+            for line in shard.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line:
+                    all_rows.append(json.loads(line))
+        except Exception:
+            pass
+
+    if not all_rows:
+        return None
+
+    # Use last step's data
+    max_step = max(r.get("step", 0) for r in all_rows)
+    last_rows = [r for r in all_rows if r.get("step", 0) == max_step]
+
+    # Rebuild graph from agent relationship dicts
+    graph_edges: set[frozenset] = set()
+    type_counts: dict = {"ally": 0, "rival": 0, "mentor": 0, "mentee": 0, "neutral": 0}
+    agents_with_rel: set = set()
+
+    for row in last_rows:
+        aid = row.get("agent_id")
+        rels = row.get("relationships", {})
+        if rels:
+            agents_with_rel.add(aid)
+        for other_str, rt in rels.items():
+            edge = frozenset([aid, int(other_str)])
+            if edge not in graph_edges:
+                graph_edges.add(edge)
+                type_counts[rt] = type_counts.get(rt, 0) + 1
+
+    # Also read from type_counts in any row (more accurate)
+    if last_rows and "type_counts" in last_rows[0]:
+        tc = last_rows[0]["type_counts"]
+        type_counts = {k: tc.get(k, 0) for k in type_counts}
+
+    edges = sum(type_counts.values())
+    density = edges / (n_agents * (n_agents - 1) / 2) if n_agents > 1 else 0.0
+    avg_deg = edges * 2 / n_agents if n_agents else 0.0
+
+    return {
+        "social_edges": edges,
+        "social_density": round(density, 4),
+        "avg_degree": round(avg_deg, 3),
+        "type_counts": type_counts,
+        "agents_with_rel": len(agents_with_rel),
+    }
+
+
 def _m1_population(run_dir: str | Path) -> tuple[int, bool]:
     """M1: live-agent count at the final step.
 
@@ -328,8 +398,10 @@ def compute_awi(run_dir: str | Path) -> AWISnapshot:
         if social_steps
         else len(extract_blackboards(run_dir))
     )
-    # M7
-    m7 = _m7_social(run_dir, n_agents)
+    # M7: try RelationshipSpace computed first, else proxy
+    m7_computed = _m7_relationship_computed(run_dir, n_agents)
+    m7 = m7_computed if m7_computed is not None else _m7_social(run_dir, n_agents)
+    m7_is_computed = m7_computed is not None
     # M9
     articles = gov_state.get("articles", [])
     proposals = gov_state.get("proposals", [])
@@ -375,7 +447,7 @@ def compute_awi(run_dir: str | Path) -> AWISnapshot:
         "M4": "computed",
         "M5": "computed",
         "M6": "proxy",
-        "M7": "proxy",
+        "M7": "computed" if m7_is_computed else "proxy",
         "M8": "computed",
         "M9": "computed",
     }
