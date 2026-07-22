@@ -28,16 +28,43 @@ _logger = get_logger()
 
 # EW landmark coordinates (fictional bbox 116.25-116.45 E, 39.85-39.95 N)
 _DEFAULT_LANDMARKS: Dict[str, Dict[str, Any]] = {
-    "Town Hall":     {"lng": 116.350, "lat": 39.920, "desc": "Governance chamber."},
-    "Police Station":{"lng": 116.355, "lat": 39.912, "desc": "Law enforcement."},
-    "Cafe":          {"lng": 116.340, "lat": 39.916, "desc": "Social hub."},
-    "TechHub":       {"lng": 116.362, "lat": 39.910, "desc": "Innovation space."},
-    "Library":       {"lng": 116.335, "lat": 39.918, "desc": "Research center."},
-    "Central Plaza": {"lng": 116.348, "lat": 39.914, "desc": "Main gathering space."},
-    "Market":        {"lng": 116.342, "lat": 39.908, "desc": "Economic exchange."},
-    "Victory Arch":  {"lng": 116.358, "lat": 39.925, "desc": "Civic landmark."},
-    "Home":          {"lng": 116.345, "lat": 39.905, "desc": "Private residence."},
-    "Park":          {"lng": 116.330, "lat": 39.920, "desc": "Green leisure space."},
+    # Central
+    "Central Plaza":    {"lng": 116.3560, "lat": 39.9128, "desc": "Main gathering space."},
+    "Town Hall":        {"lng": 116.3568, "lat": 39.9140, "desc": "Governance chamber."},
+    "Victory Arch":     {"lng": 116.3557, "lat": 39.9140, "desc": "Pitch competition venue."},
+    "Billboard":        {"lng": 116.3562, "lat": 39.9134, "desc": "City-wide announcements."},
+    "Founders Memorial":{"lng": 116.3550, "lat": 39.9118, "desc": "Historic civic monument."},
+    "Central Park":     {"lng": 116.3545, "lat": 39.9135, "desc": "Green leisure space."},
+    # East
+    "Business Tower":   {"lng": 116.3582, "lat": 39.9135, "desc": "Corporate offices."},
+    "Agent TechHub":    {"lng": 116.3582, "lat": 39.9125, "desc": "Innovation lab."},
+    "Police Station":   {"lng": 116.3582, "lat": 39.9115, "desc": "Law enforcement."},
+    "Law Office":       {"lng": 116.3596, "lat": 39.9135, "desc": "Legal services."},
+    "Hospital":         {"lng": 116.3596, "lat": 39.9123, "desc": "Medical care."},
+    "Bank":             {"lng": 116.3596, "lat": 39.9115, "desc": "Financial services."},
+    # West
+    "Public Library":   {"lng": 116.3520, "lat": 39.9140, "desc": "Research hub."},
+    "Museum":           {"lng": 116.3510, "lat": 39.9135, "desc": "Cultural heritage."},
+    "Art Gallery":      {"lng": 116.3510, "lat": 39.9123, "desc": "Visual arts space."},
+    "Radio Station":    {"lng": 116.3520, "lat": 39.9118, "desc": "Media & broadcasting."},
+    "School":           {"lng": 116.3530, "lat": 39.9140, "desc": "Education center."},
+    "Riverside Park":   {"lng": 116.3508, "lat": 39.9113, "desc": "Waterfront park."},
+    # North
+    "Home":             {"lng": 116.3545, "lat": 39.9120, "desc": "Private residence."},
+    "Bean & Brew":      {"lng": 116.3533, "lat": 39.9128, "desc": "Charging cafe."},
+    "Fresh Mart":       {"lng": 116.3525, "lat": 39.9122, "desc": "Grocery market."},
+    "Bakery":           {"lng": 116.3536, "lat": 39.9140, "desc": "Fresh baked goods."},
+    "Community Center": {"lng": 116.3546, "lat": 39.9145, "desc": "Social events hub."},
+    "Coworking Space":  {"lng": 116.3536, "lat": 39.9118, "desc": "Shared workspace."},
+    # South
+    "GameStop Arena":   {"lng": 116.3562, "lat": 39.9107, "desc": "Sports & gaming."},
+    "Sky Wheel":        {"lng": 116.3537, "lat": 39.9106, "desc": "Scenic observation wheel."},
+    "Sunset Pier":      {"lng": 116.3570, "lat": 39.9100, "desc": "Waterfront dining."},
+    "Night Market":     {"lng": 116.3548, "lat": 39.9104, "desc": "Evening market."},
+    "Stadium":          {"lng": 116.3585, "lat": 39.9106, "desc": "Sports arena."},
+    "Spa & Wellness":   {"lng": 116.3524, "lat": 39.9104, "desc": "Health & relaxation."},
+    "Cinema":           {"lng": 116.3554, "lat": 39.9113, "desc": "Film & entertainment."},
+    "Harbor":           {"lng": 116.3580, "lat": 39.9098, "desc": "Waterfront harbor."},
 }
 
 _STATE_REL = "state/EW_MOBILITY_STATE.json"
