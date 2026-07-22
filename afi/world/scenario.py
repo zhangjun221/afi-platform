@@ -29,12 +29,94 @@ from afi.world.landmarks import LANDMARKS
 from afi.world.profiles import EW_PROFILES, build_agent_specs
 
 
+
+# ── Optional pydantic schema for scenario YAML validation ────────────────────
+
+def _build_scenario_model():
+    """Build pydantic Scenario model lazily (pydantic is optional dep)."""
+    try:
+        from pydantic import BaseModel, field_validator, model_validator
+        from typing import Any, List, Optional, Union
+    except ImportError:
+        return None
+
+    class WorldConfig(BaseModel):
+        model_config = {"extra": "allow"}
+        initial_credits: float = 100.0
+        landmarks: Union[str, List[str]] = "full"
+
+    class StepConfig(BaseModel):
+        model_config = {"extra": "allow"}
+        type: str
+        num_steps: Optional[int] = None
+        tick: Optional[int] = None
+        instruction: Optional[str] = None
+
+        @field_validator("type")
+        @classmethod
+        def _valid_type(cls, v):
+            allowed = {"run", "intervene", "ask", "questionnaire"}
+            if v not in allowed:
+                raise ValueError(f"step type must be one of {allowed}, got '{v}'")
+            return v
+
+    class StepsConfig(BaseModel):
+        start_t: str
+        steps: List[StepConfig]
+
+        @field_validator("steps")
+        @classmethod
+        def _nonempty(cls, v):
+            if not v:
+                raise ValueError("steps must not be empty")
+            return v
+
+    class ScenarioConfig(BaseModel):
+        model_config = {"extra": "allow"}
+        world: Optional[WorldConfig] = None
+        agents: Union[str, List[str], None] = "full"
+        start_t: Optional[str] = None
+        steps: Optional[List[StepConfig]] = None
+
+        @model_validator(mode="after")
+        def _check_start_t(self):
+            if self.steps and not self.start_t:
+                raise ValueError("start_t is required when steps are present")
+            return self
+
+    return ScenarioConfig
+
+
+_SCENARIO_MODEL = None  # lazy singleton
+
+
 def load_scenario(yaml_path: str | Path) -> dict:
-    """Load a declarative EW-subset scenario YAML into a dict."""
+    """Load a declarative EW-subset scenario YAML into a dict.
+
+    When pydantic is installed (``pip install -e ".[yaml]"`` pulls it in),
+    the loaded dict is validated against ScenarioConfig. Errors are surfaced
+    immediately with clear field-level messages rather than at AS run time.
+    Validation is a no-op when pydantic is absent (backward-compatible).
+    """
     import yaml  # optional extra [yaml]; required for run-ew
 
     with open(yaml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        data = yaml.safe_load(f)
+
+    # Optional pydantic validation
+    global _SCENARIO_MODEL
+    if _SCENARIO_MODEL is None:
+        _SCENARIO_MODEL = _build_scenario_model()  # returns None if no pydantic
+
+    if _SCENARIO_MODEL is not None:
+        try:
+            _SCENARIO_MODEL.model_validate(data)
+        except Exception as exc:
+            raise ValueError(
+                f"Invalid scenario YAML '{yaml_path}':\n{exc}"
+            ) from exc
+
+    return data
 
 
 def _resolve_profiles(scenario: dict) -> list[dict]:
